@@ -29,17 +29,14 @@ jobs:
         fn update context api-url $ORACLE_API
         fn update context registry phx.ocir.io/axdoipz9dgju/$ORACLE_REGISTRY
         docker login phx.ocir.io --username $ORACLE_DOCKER_USER --password $ORACLE_DOCKER_PASS
-        ls
         
     - name: Create Config File
       env:
         FILE_NAME: "$HOME/.oci/config"
         FILE_DATA: ${{ secrets.ORACLE_CONFIG }}
       run: |
-        sudo mkdir $HOME/.oci
-        sudo touch $HOME/.oci/config
-        ls $HOME/
-        sudo echo $FILE_DATA > "$FILE_NAME"
+        mkdir $HOME/.oci
+        echo $FILE_DATA > $HOME/.oci/config
     
     - name: Create Key File
       env:
