@@ -1,0 +1,15 @@
+{
+  "name": "clip",
+  "version": "0.0.1",
+  "description": "Clip function",
+  "main": "func.js",
+  "author": "Garret Harp",
+  "license": "",
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.0.20",
+    "@fnproject/fdk": ">=0.0.18",
+    "aws-sdk": "^2.689.0",
+    "axios": "^0.19.2",
+    "fluent-ffmpeg": "^2.1.2"
+  }
+}
