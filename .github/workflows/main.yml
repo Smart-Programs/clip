@@ -36,10 +36,10 @@ jobs:
         FILE_NAME: "~/.oci/config"
         FILE_DATA: ${{ secrets.ORACLE_CONFIG }}
       run: |
-        mkdir ~/.oci
-        touch ~/.oci/config
+        sudo mkdir ~/.oci
+        sudo touch ~/.oci/config
         ls ~/
-        echo $FILE_DATA > "$FILE_NAME"
+        sudo echo $FILE_DATA > "$FILE_NAME"
     
     - name: Create Key File
       env:
