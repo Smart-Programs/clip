@@ -38,6 +38,7 @@ jobs:
       run: |
         mkdir ~/.oci
         touch ~/.oci/config
+        ls ~/
         echo $FILE_DATA > "$FILE_NAME"
     
     - name: Create Key File
