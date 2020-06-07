@@ -32,6 +32,7 @@ jobs:
         fn update context registry phx.ocir.io/axdoipz9dgju/$ORACLE_REGISTRY
         docker login phx.ocir.io --username $ORACLE_DOCKER_USER --password $ORACLE_DOCKER_PASS
         mkdir ~/.oci && touch ~/.oci/config && echo $ORACLE_CONFIG > ~/.oci/config
+        echo "$(cat ~/.oci/config)"
         touch ~/.oci/oci_api_key.pem && echo $ORACLE_KEY_FILE > ~/.oci/oci_api_key.pem
         
     - name: Deploy
