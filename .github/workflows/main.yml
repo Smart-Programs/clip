@@ -32,17 +32,18 @@ jobs:
         
     - name: Create Config File
       env:
-        FILE_NAME: "$HOME/.oci/config"
         FILE_DATA: ${{ secrets.ORACLE_CONFIG }}
       run: |
         mkdir $HOME/.oci
         echo $FILE_DATA > $HOME/.oci/config
+        ls $HOME/
+        ls $HOME/.oci/
     
     - name: Create Key File
       env:
-        FILE_NAME: "~/.oci/oci_api_key.pem"
         FILE_DATA: ${{ secrets.ORACLE_KEY_FILE }}
-      run: mkdir ~/.oci && touch ~/.oci/oci_api_key.pem && echo $FILE_DATA > "$FILE_NAME"
+      run: |
+        echo $FILE_DATA > $HOME/.oci/oci_api_key.pem
         
     - name: Deploy
       run: DEBUG=1 fn deploy --app smartclips
