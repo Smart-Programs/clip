@@ -23,6 +23,7 @@ jobs:
         ORACLE_DOCKER_USER: ${{ secrets.ORACLE_DOCKER_USER }}
         ORACLE_DOCKER_PASS: ${{ secrets.ORACLE_DOCKER_PASS }}
         ORACLE_CONFIG: ${{ secrets.ORACLE_CONFIG }}
+        ORACLE_KEY_FILE: ${{ secrets.ORACLE_KEY_FILE }}
       run: |
         fn create context smartprograms-root --provider oracle
         fn use context smartprograms-root
@@ -31,6 +32,7 @@ jobs:
         fn update context registry phx.ocir.io/axdoipz9dgju/$ORACLE_REGISTRY
         docker login phx.ocir.io --username $ORACLE_DOCKER_USER --password $ORACLE_DOCKER_PASS
         mkdir ~/.oci && touch ~/.oci/config && echo $ORACLE_CONFIG > ~/.oci/config
+        touch ~/.oci/oci_api_key.pem && echo $ORACLE_KEY_FILE > ~/.oci/oci_api_key.pem
         
     - name: Deploy
       run: fn deploy --app smartclips
