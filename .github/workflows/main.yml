@@ -33,11 +33,11 @@ jobs:
         
     - name: Create Config File
       env:
-        FILE_NAME: "~/.oci/config"
+        FILE_NAME: "$HOME/.oci/config"
         FILE_DATA: ${{ secrets.ORACLE_CONFIG }}
       run: |
-        sudo mkdir ~/.oci
-        sudo touch ~/.oci/config
+        sudo mkdir $HOME/.oci
+        sudo touch $HOME/.oci/config
         ls ~/
         sudo echo $FILE_DATA > "$FILE_NAME"
     
