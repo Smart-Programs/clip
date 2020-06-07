@@ -29,20 +29,19 @@ jobs:
         fn update context api-url $ORACLE_API
         fn update context registry phx.ocir.io/axdoipz9dgju/$ORACLE_REGISTRY
         docker login phx.ocir.io --username $ORACLE_DOCKER_USER --password $ORACLE_DOCKER_PASS
-        mkdir ~/.oci
+        mkdir ~/.oci && touch ~/.oci/config && touch ~/.oci/oci_api_key.pem
         
     - name: Create Config File
-      uses: finnp/create-file-action@1.0.0
       env:
         FILE_NAME: "~/.oci/config"
         FILE_DATA: ${{ secrets.ORACLE_CONFIG }}
+      run: echo $FILE_DATA > "$FILE_NAME"
     
     - name: Create Key File
-      uses: finnp/create-file-action@1.0.0
       env:
         FILE_NAME: "~/.oci/oci_api_key.pem"
         FILE_DATA: ${{ secrets.ORACLE_KEY_FILE }}
-
+      run: echo $FILE_DATA > "$FILE_NAME"
         
     - name: Deploy
       run: DEBUG=1 fn deploy --app smartclips
