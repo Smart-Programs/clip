@@ -29,6 +29,7 @@ jobs:
         fn update context api-url $ORACLE_API
         fn update context registry phx.ocir.io/axdoipz9dgju/$ORACLE_REGISTRY
         docker login phx.ocir.io --username $ORACLE_DOCKER_USER --password $ORACLE_DOCKER_PASS
+        mkdir ~/.oci
         
     - name: Create Config File
       uses: finnp/create-file-action@1.0.0
