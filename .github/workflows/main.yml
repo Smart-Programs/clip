@@ -31,19 +31,14 @@ jobs:
         docker login phx.ocir.io --username $ORACLE_DOCKER_USER --password $ORACLE_DOCKER_PASS
         
     - name: Create Config File
-      env:
-        FILE_DATA: ${{ secrets.ORACLE_CONFIG }}
       run: |
         mkdir $HOME/.oci
-        echo $FILE_DATA > $HOME/.oci/config
-        ls $HOME/
-        ls $HOME/.oci/
+        echo "${{secrets.ORACLE_CONFIG}}" >> $HOME/.oci/config
     
     - name: Create Key File
-      env:
-        FILE_DATA: ${{ secrets.ORACLE_KEY_FILE }}
       run: |
-        echo $FILE_DATA > $HOME/.oci/oci_api_key.pem
+        echo "${{secrets.ORACLE_KEY_FILE}}" >> $HOME/.oci/oci_api_key.pem
+        ls $HOME/.oci/
         
     - name: Deploy
       run: DEBUG=1 fn deploy --app smartclips
