@@ -1,0 +1,34 @@
+name: CD
+
+on:
+  push:
+    branches: [ master ]
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # Runs a single command using the runners shell
+    - name: Install FN project
+      run: curl -LSs https://raw.githubusercontent.com/fnproject/cli/master/install | sh
+        
+    - name: Setup FN project
+      env:
+        ORACLE_COMPARTMENT: ${{ secrets.ORACLE_COMPARTMENT }}
+        ORACLE_API: ${{ secrets.ORACLE_API }}
+        ORACLE_REGISTRY: ${{ secrets.ORACLE_REGISTRY }}
+        ORACLE_DOCKER_USER: ${{ secrets.ORACLE_DOCKER_USER }}
+        ORACLE_DOCKER_PASS: ${{ secrets.ORACLE_DOCKER_PASS }}
+      run: |
+        fn create context smartprograms-root --provider oracle
+        fn use context smartprograms-root
+        fn update context oracle.compartment-id $ORACLE_COMPARTMENT
+        fn update context api-url $ORACLE_API
+        fn update context registry phx.ocir.io/axdoipz9dgju/$ORACLE_REGISTRY
+        docker login phx.ocir.io --username $ORACLE_DOCKER_USER --password $ORACLE_DOCKER_PASS
+
+    - name: Deploy
+      run: fn deploy --app smartclips
