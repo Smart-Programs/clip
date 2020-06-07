@@ -38,7 +38,7 @@ jobs:
       run: |
         sudo mkdir $HOME/.oci
         sudo touch $HOME/.oci/config
-        ls ~/
+        ls $HOME/
         sudo echo $FILE_DATA > "$FILE_NAME"
     
     - name: Create Key File
