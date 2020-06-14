@@ -1,11 +1,11 @@
 const fdk = require('@fnproject/fdk')
 const axios = require('axios')
 const {
-  mkdirSync,
-  existsSync,
-  readFileSync,
-  rmdirSync,
-  unlinkSync
+    mkdirSync,
+    existsSync,
+    readFileSync,
+    rmdirSync,
+    unlinkSync,
 } = require('fs')
 
 const ffmpeg = require('fluent-ffmpeg')
@@ -24,12 +24,12 @@ const handler = async (input, ctx) => {
 
   const {
     files,
-    key,
     length,
     accountId,
     clipId,
     gameId,
     subscriber,
+    base,
     S3_CONFIG,
     S3_BUCKET,
     DYNAMO_CONFIG
@@ -37,7 +37,7 @@ const handler = async (input, ctx) => {
 
   if (
     !files ||
-    !key ||
+    !base ||
     !length ||
     !accountId ||
     !clipId ||
@@ -52,14 +52,15 @@ const handler = async (input, ctx) => {
   const s3 = new S3(S3_CONFIG)
   let DocumentClient
 
-  if (DYNAMO_CONFIG) DocumentClient = new DynamoDB.DocumentClient(DYNAMO_CONFIG)
+  if (DYNAMO_CONFIG)
+    DocumentClient = new DynamoDB.DocumentClient(DYNAMO_CONFIG)
 
   if (!existsSync(`/tmp/${accountId}`))
     mkdirSync(`/tmp/${accountId}`, { recursive: true })
 
-  const base = `https://videocdn.mixer.com/hls/${key}_source`
+  // const base = `https://videocdn.mixer.com/hls/${key}_source`
 
-  const videoParts = files.map(file => `${base}/${file}`)
+  const videoParts = files.map((file) => `${base}/${file}`)
 
   const videoConcat = `${accountId}/${clipId}.ts`
   const videoFile = `${accountId}/${clipId}.mp4`
@@ -67,7 +68,7 @@ const handler = async (input, ctx) => {
 
   const results = await downloadParts(videoParts)
 
-  const didFail = results.findIndex(value => value.downloaded === false)
+  const didFail = results.findIndex((value) => value.downloaded === false)
 
   if (didFail !== -1) {
     if (DocumentClient)
@@ -89,7 +90,7 @@ const handler = async (input, ctx) => {
 
   const concat = await concatParts(videoParts, videoConcat)
 
-  videoParts.forEach(part => delete memStore[part])
+  videoParts.forEach((part) => delete memStore[part])
 
   const inputImage = new stream.PassThrough(),
     inputVideo = new stream.PassThrough()
@@ -114,11 +115,11 @@ const handler = async (input, ctx) => {
 
   const videoCreated =
     renders.findIndex(
-      ({ type, created }) => created === true && type === 'video'
+        ({ type, created }) => created === true && type === 'video'
     ) !== -1
   const imageCreated =
     renders.findIndex(
-      ({ type, created }) => created === true && type === 'image'
+        ({ type, created }) => created === true && type === 'image'
     ) !== -1
 
   if (!videoCreated) {
@@ -143,15 +144,22 @@ const handler = async (input, ctx) => {
     })
   }
 
-  const uploads = await Promise.all([
-    uploadFile(imageFile, memStore[imageFile], s3, S3_BUCKET),
-    uploadFile(videoFile, readFileSync(`/tmp/${videoFile}`), s3, S3_BUCKET)
-  ])
+  let uploadPromises = [
+    uploadFile(videoFile, readFileSync(`/tmp/${videoFile}`), s3, S3_BUCKET),
+  ]
+
+  if (imageCreated) {
+    uploadPromises.push(
+      uploadFile(imageFile, memStore[imageFile], s3, S3_BUCKET)
+    )
+  }
+
+  const uploads = await Promise.all(uploadPromises)
 
   delete memStore[imageFile]
   unlinkSync(`/tmp/${videoFile}`)
 
-  if (uploads[1].uploaded === false) {
+  if (uploads[0].uploaded === false) {
     if (DocumentClient)
       await to(
         updateClipDocument({
@@ -185,8 +193,8 @@ const handler = async (input, ctx) => {
     )
 
   return Promise.resolve({
-    created: true,
-    url: `https://smartclips.app/${accountId}/${clipId}`
+      created: true,
+      url: `https://smartclips.app/${accountId}/${clipId}`
   })
 }
 
@@ -194,12 +202,12 @@ fdk.handle(handler)
 
 module.exports = { handler }
 
-function downloadParts (parts) {
+function downloadParts(parts) {
   return Promise.all(parts.map(downloadPart))
 }
 
-function downloadPart (part) {
-  return new Promise(resolve => {
+function downloadPart(part) {
+  return new Promise((resolve) => {
     axios
       .get(part, { responseType: 'arraybuffer' })
       .then(({ status, data }) => {
@@ -215,7 +223,7 @@ function downloadPart (part) {
           resolve({ downloaded: true })
         }
       })
-      .catch(error => {
+      .catch((error) => {
         return resolve({
           downloaded: false,
           error: `Server returned bad status: ${
@@ -226,8 +234,8 @@ function downloadPart (part) {
   })
 }
 
-function concatParts (parts, filename) {
-  return new Promise(resolve => {
+function concatParts(parts, filename) {
+  return new Promise((resolve) => {
     const file = parts.reduce(
       (p, c) => Buffer.concat([p, memStore[c]]),
       Buffer.from('')
@@ -249,7 +257,7 @@ const Writable = stream.Writable
 
 let memStore = {}
 
-function WMStrm (key, options) {
+function WMStrm(key, options) {
   if (!(this instanceof WMStrm)) {
     return new WMStrm(key, options)
   }
@@ -270,18 +278,20 @@ WMStrm.prototype._write = function (chunk, enc, cb) {
  * RENDER FUNCTIONS
  */
 
-function renderImage ({
-  inputType = 'mpegts',
-  outputType = 'mjpeg',
-  input,
-  output
+function renderImage({
+    inputType = 'mpegts',
+    outputType = 'mjpeg',
+    input,
+    output,
 }) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     ffmpeg()
       .addInput(input)
       .inputFormat(inputType)
       .addOutputOptions(['-vframes 1'])
-      .on('error', e => resolve({ created: false, error: e, type: 'image' }))
+      .on('error', (e) =>
+        resolve({ created: false, error: e, type: 'image' })
+      )
       .on('end', () => resolve({ created: true, type: 'image' }))
       .toFormat(outputType)
       .output(output)
@@ -289,8 +299,8 @@ function renderImage ({
   })
 }
 
-function renderVideo ({ input, inputType = 'mpegts', output, length }) {
-  return new Promise((resolve, reject) => {
+function renderVideo({ input, inputType = 'mpegts', output, length }) {
+  return new Promise((resolve) => {
     ffmpeg()
       .addInput(input)
       .inputFormat(inputType)
@@ -301,14 +311,16 @@ function renderVideo ({ input, inputType = 'mpegts', output, length }) {
         '-async 1',
         '-t ' + length
       ])
-      .on('error', err =>
+      .on('error', (err) =>
         resolve({ created: false, error: err, type: 'video' })
       )
       .on('end', () => {
         const created = existsSync(output)
         resolve({
           created,
-          error: created ? null : 'File does not exists after render.',
+          error: created
+            ? null
+            : 'File does not exists after render.',
           type: 'video'
         })
       })
@@ -320,8 +332,8 @@ function renderVideo ({ input, inputType = 'mpegts', output, length }) {
  * UPLOAD FUNCTION
  */
 
-function uploadFile (filename, data, s3, Bucket, ACL = 'public-read') {
-  return new Promise(resolve => {
+function uploadFile(filename, data, s3, Bucket, ACL = 'public-read') {
+  return new Promise((resolve) => {
     const params = {
       Bucket,
       Key: filename,
@@ -331,22 +343,22 @@ function uploadFile (filename, data, s3, Bucket, ACL = 'public-read') {
 
     s3.putObject(params)
       .promise()
-      .then(results => {
+      .then((results) => {
         resolve({ uploaded: true, results })
       })
-      .catch(error => {
+      .catch((error) => {
         resolve({ uploaded: false, error })
       })
   })
 }
 
-function updateClipDocument ({
-  accountId,
-  clipId,
-  gameId,
-  subscriber,
-  status,
-  DocumentClient
+function updateClipDocument({
+    accountId,
+    clipId,
+    gameId,
+    subscriber,
+    status,
+    DocumentClient,
 }) {
   const PK = `ACCOUNT#${accountId}`
   const SK = `#CLIP#${clipId}`
@@ -405,4 +417,4 @@ function updateClipDocument ({
   }
 }
 
-const to = promise => promise.then(r => [null, r]).catch(e => [e, null])
+const to = (promise) => promise.then((r) => [null, r]).catch((e) => [e, null])
